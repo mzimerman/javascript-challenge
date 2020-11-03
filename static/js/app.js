@@ -1,66 +1,61 @@
 // from data.js
-var tableData = data;
+var tableData = data
 
-// function to display UFO sightings
-function tableDisplay(ufoSightings) {
-    var tbody = d3.select("tbody");
-    ufoSightings.forEach((ufoRecord) => {
-        var row = tbody.append("tr");
-        Object.defineProperties(ufoRecord).forEach(([key, value]) => {
-            var cell = row.append("td");
-            cell.html(value);
-        });
-    });
-};
-
-// clear table for new data
-function deleteTbody() {
-    d3.select("tbody")
-        .selectAll("tr").remove()
-        .selectAll("td").remove();
-};
-
-// intial display of all UFO sightings
-console.log(tableData);
-tableDisplay(tableData);
-
-// 'Filter Table' button
+// Variables
 var button = d3.select("#filter-btn");
+var inputField1 = d3.select("#datetime");
+var inputField2 = d3.select("#city");
+var tbody = d3.select("tbody");
+var resetbtn = d3.select("#reset-btn");
+var columns = ["datetime", "city", "state", "country", "shape", "durationMinutes", "comments"]
 
-// filter database and display
-button.on("click", function(event) {
-    
-    d3.event.preventDefault();
-    deleteTbody();
+var populate = (dataInput) => {
 
-    var filteredData = tableData;
-    var inputID = document.getElementsByClassName("form-control");
+  dataInput.forEach(ufo_sightings => {
+    var row = tbody.append("tr");
+    columns.forEach(column => row.append("td").text(ufo_sightings[column])
+    )
+  });
+}
 
-    // iterate through all input fields
-    for (var i = 0; i < inputID.length; i++) {
+//Populate table
+populate(data);
 
-    var idName = inputID[i].id;
-    var field = d3.select("#" + idName).property("value");
-    
-    // treat empty or space-only fields as a search for ALL for that field
-    if (field.trim() !=="") {
-        var filteredData = filteredData.filter(ufoSighting =>
-            // match as case insensitive
-        ufoSighting[idName].toUpperCase().trim() ===
-        field.toUpperCase().trim());
-    };
-    };
+// Filter by attribute
+button.on("click", () => {
+  d3.event.preventDefault();
+  var inputDate = inputField1.property("value").trim();
+  var inputCity = inputField2.property("value").toLowerCase().trim();
+  // Filter by field matching input value
+  var filterDate = data.filter(data => data.datetime === inputDate);
+  console.log(filterDate)
+  var filterCity = data.filter(data => data.city === inputCity);
+  console.log(filterCity)
+  var filterData = data.filter(data => data.datetime === inputDate && data.city === inputCity);
+  console.log(filterData)
 
-// display message if no records found
-if (filteredData.length == 0) {
-    d3.select("tbody")
-      .append("tr")
-      .append("td")
-        .attr("colspan", 7)
-        .html("<h4>No Records Found</h4>");
-};
+  // Add filtered sighting to table
+  tbody.html("");
 
-console.log(filteredData);
-tableDisplay(filteredData);
-});
+  let response = {
+    filterData, filterCity, filterDate
+  }
+
+  if (response.filterData.length !== 0) {
+    populate(filterData);
+  }
+    else if (response.filterData.length === 0 && ((response.filterCity.length !== 0 || response.filterDate.length !== 0))){
+      populate(filterCity) || populate(filterDate);
+  
+    }
+    else {
+      tbody.append("tr").append("td").text("No results found!"); 
+    }
+})
+
+resetbtn.on("click", () => {
+  tbody.html("");
+  populate(data)
+  console.log("Table reset")
+})
 
